@@ -51,6 +51,26 @@ func (s *server) Mod(ctx context.Context, in *calculatorpb.ModRequest) (*calcula
 	return &calculatorpb.ModReply{N1: in.N1 % in.N2}, nil
 }
 
+func (*server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecompositionRequest, stream calculatorpb.Calculator_PrimeNumberDecompositionServer) error {
+	log.Printf("Received PrimeNumberDecomposition RPC: %v\n", req)
+
+	number := req.GetNumber()
+	divisor := int64(2)
+
+	for number > 1 {
+		if number%divisor == 0 {
+			stream.Send(&calculatorpb.PrimeNumberDecompositionResponse{
+				PrimeFactor: divisor,
+			})
+			number = number / divisor
+		} else {
+			divisor++
+			log.Printf("Divisor has increased to %v\n", divisor)
+		}
+	}
+	return nil
+}
+
 func main() {
 	log.Printf("Calculator server, waiting for inputs")
 	lis, err := net.Listen(protocol, port)

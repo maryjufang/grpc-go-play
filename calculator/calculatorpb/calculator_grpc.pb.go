@@ -27,6 +27,7 @@ type CalculatorClient interface {
 	Multiply(ctx context.Context, in *MultiplyRequest, opts ...grpc.CallOption) (*MultiplyReply, error)
 	Divide(ctx context.Context, in *DivideRequest, opts ...grpc.CallOption) (*DivideReply, error)
 	Mod(ctx context.Context, in *ModRequest, opts ...grpc.CallOption) (*ModReply, error)
+	PrimeNumberDecomposition(ctx context.Context, in *PrimeNumberDecompositionRequest, opts ...grpc.CallOption) (Calculator_PrimeNumberDecompositionClient, error)
 }
 
 type calculatorClient struct {
@@ -82,6 +83,38 @@ func (c *calculatorClient) Mod(ctx context.Context, in *ModRequest, opts ...grpc
 	return out, nil
 }
 
+func (c *calculatorClient) PrimeNumberDecomposition(ctx context.Context, in *PrimeNumberDecompositionRequest, opts ...grpc.CallOption) (Calculator_PrimeNumberDecompositionClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Calculator_ServiceDesc.Streams[0], "/calculator.Calculator/PrimeNumberDecomposition", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &calculatorPrimeNumberDecompositionClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Calculator_PrimeNumberDecompositionClient interface {
+	Recv() (*PrimeNumberDecompositionResponse, error)
+	grpc.ClientStream
+}
+
+type calculatorPrimeNumberDecompositionClient struct {
+	grpc.ClientStream
+}
+
+func (x *calculatorPrimeNumberDecompositionClient) Recv() (*PrimeNumberDecompositionResponse, error) {
+	m := new(PrimeNumberDecompositionResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CalculatorServer is the server API for Calculator service.
 // All implementations must embed UnimplementedCalculatorServer
 // for forward compatibility
@@ -91,6 +124,7 @@ type CalculatorServer interface {
 	Multiply(context.Context, *MultiplyRequest) (*MultiplyReply, error)
 	Divide(context.Context, *DivideRequest) (*DivideReply, error)
 	Mod(context.Context, *ModRequest) (*ModReply, error)
+	PrimeNumberDecomposition(*PrimeNumberDecompositionRequest, Calculator_PrimeNumberDecompositionServer) error
 	mustEmbedUnimplementedCalculatorServer()
 }
 
@@ -112,6 +146,9 @@ func (UnimplementedCalculatorServer) Divide(context.Context, *DivideRequest) (*D
 }
 func (UnimplementedCalculatorServer) Mod(context.Context, *ModRequest) (*ModReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Mod not implemented")
+}
+func (UnimplementedCalculatorServer) PrimeNumberDecomposition(*PrimeNumberDecompositionRequest, Calculator_PrimeNumberDecompositionServer) error {
+	return status.Errorf(codes.Unimplemented, "method PrimeNumberDecomposition not implemented")
 }
 func (UnimplementedCalculatorServer) mustEmbedUnimplementedCalculatorServer() {}
 
@@ -216,6 +253,27 @@ func _Calculator_Mod_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Calculator_PrimeNumberDecomposition_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(PrimeNumberDecompositionRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CalculatorServer).PrimeNumberDecomposition(m, &calculatorPrimeNumberDecompositionServer{stream})
+}
+
+type Calculator_PrimeNumberDecompositionServer interface {
+	Send(*PrimeNumberDecompositionResponse) error
+	grpc.ServerStream
+}
+
+type calculatorPrimeNumberDecompositionServer struct {
+	grpc.ServerStream
+}
+
+func (x *calculatorPrimeNumberDecompositionServer) Send(m *PrimeNumberDecompositionResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // Calculator_ServiceDesc is the grpc.ServiceDesc for Calculator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -244,6 +302,12 @@ var Calculator_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Calculator_Mod_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "PrimeNumberDecomposition",
+			Handler:       _Calculator_PrimeNumberDecomposition_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "calculator/calculatorpb/calculator.proto",
 }

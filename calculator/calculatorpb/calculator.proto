@@ -4,11 +4,21 @@ package calculator;
 option go_package = "github.com/maryjufang/calculatorpb";
 
 service Calculator {
-  rpc Add(AddRequest) returns (AddReply) {}
-  rpc Subtract(SubtractRequest) returns (SubtractReply) {}
-  rpc Multiply(MultiplyRequest) returns (MultiplyReply) {}
-  rpc Divide(DivideRequest) returns (DivideReply) {}
-  rpc Mod(ModRequest) returns (ModReply) {}
+  rpc Add(AddRequest) returns (AddReply) {};
+  rpc Subtract(SubtractRequest) returns (SubtractReply) {};
+  rpc Multiply(MultiplyRequest) returns (MultiplyReply) {};
+  rpc Divide(DivideRequest) returns (DivideReply) {};
+  rpc Mod(ModRequest) returns (ModReply) {};
+
+  rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {};
+}
+
+message PrimeNumberDecompositionRequest {
+  int64 number = 1;
+}
+
+message PrimeNumberDecompositionResponse {
+  int64 prime_factor = 1;
 }
 
 message AddRequest {

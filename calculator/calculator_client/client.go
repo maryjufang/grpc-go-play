@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -27,21 +28,8 @@ func argParser(n1 string, n2 string) (int32, int32) {
 	return int32(N1), int32(N2)
 }
 
-func main() {
-	if len(os.Args) != 3 {
-		log.Fatalf("2 numbers expected: n1 n2")
-	}
-
-	n1, n2 := argParser(os.Args[1], os.Args[2])
-	log.Printf("n1 = %v, n2 = %v", n1, n2)
-
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("cannot connect: %s", err)
-	}
-	defer conn.Close()
-
-	client := calculatorpb.NewCalculatorClient(conn)
+func doMath(client calculatorpb.CalculatorClient, n1, n2 int32) {
+	log.Printf("In doMath doGreet")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -97,4 +85,43 @@ func main() {
 		log.Fatalf("Dividing error: %s", err)
 	}
 	log.Printf("%d %% %d = %d", n1, n2, modResult.N1)
+}
+
+func doServerStreaming(c calculatorpb.CalculatorClient) {
+	log.Printf("Starting to do a PrimeDecomposition Server Streaming RPC...")
+	req := &calculatorpb.PrimeNumberDecompositionRequest{
+		Number: 12390392840,
+	}
+	stream, err := c.PrimeNumberDecomposition(context.Background(), req)
+	if err != nil {
+		log.Fatalf("error while calling PrimeDecomposition RPC: %v", err)
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Something happened: %v", err)
+		}
+		log.Printf(strconv.FormatInt(res.GetPrimeFactor(), 10))
+	}
+}
+
+func main() {
+	if len(os.Args) != 3 {
+		log.Fatalf("2 numbers expected: n1 n2")
+	}
+
+	n1, n2 := argParser(os.Args[1], os.Args[2])
+	log.Printf("n1 = %v, n2 = %v", n1, n2)
+
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("cannot connect: %s", err)
+	}
+	defer conn.Close()
+	client := calculatorpb.NewCalculatorClient(conn)
+	doMath(client, n1, n2)
+	doServerStreaming(client)
 }
