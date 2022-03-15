@@ -43,6 +43,14 @@ func (s *server) Divide(ctx context.Context, in *calculatorpb.DivideRequest) (*c
 	return &calculatorpb.DivideReply{N1: in.N1 / in.N2}, nil
 }
 
+func (s *server) Mod(ctx context.Context, in *calculatorpb.ModRequest) (*calculatorpb.ModReply, error) {
+	log.Printf("Modulo n1 = %v, n2 = %v", in.N1, in.N2)
+	if in.N2 == 0 {
+		return &calculatorpb.ModReply{N1: 0}, errors.New("ERROR: cannot mod by zero.")
+	}
+	return &calculatorpb.ModReply{N1: in.N1 % in.N2}, nil
+}
+
 func main() {
 	log.Printf("Calculator server, waiting for inputs")
 	lis, err := net.Listen(protocol, port)

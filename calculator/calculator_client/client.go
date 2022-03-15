@@ -87,4 +87,14 @@ func main() {
 		log.Fatalf("Dividing error: %s", err)
 	}
 	log.Printf("%d / %d = %d", n1, n2, divideResult.N1)
+
+	reqMod := &calculatorpb.ModRequest{
+		N1: int32(n1),
+		N2: int32(n2),
+	}
+	modResult, err := client.Mod(ctx, reqMod)
+	if err != nil {
+		log.Fatalf("Dividing error: %s", err)
+	}
+	log.Printf("%d %% %d = %d", n1, n2, modResult.N1)
 }
