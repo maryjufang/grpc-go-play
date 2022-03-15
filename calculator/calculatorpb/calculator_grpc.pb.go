@@ -26,6 +26,7 @@ type CalculatorClient interface {
 	Subtract(ctx context.Context, in *SubtractRequest, opts ...grpc.CallOption) (*SubtractReply, error)
 	Multiply(ctx context.Context, in *MultiplyRequest, opts ...grpc.CallOption) (*MultiplyReply, error)
 	Divide(ctx context.Context, in *DivideRequest, opts ...grpc.CallOption) (*DivideReply, error)
+	Mod(ctx context.Context, in *ModRequest, opts ...grpc.CallOption) (*ModReply, error)
 }
 
 type calculatorClient struct {
@@ -72,6 +73,15 @@ func (c *calculatorClient) Divide(ctx context.Context, in *DivideRequest, opts .
 	return out, nil
 }
 
+func (c *calculatorClient) Mod(ctx context.Context, in *ModRequest, opts ...grpc.CallOption) (*ModReply, error) {
+	out := new(ModReply)
+	err := c.cc.Invoke(ctx, "/calculator.Calculator/Mod", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CalculatorServer is the server API for Calculator service.
 // All implementations must embed UnimplementedCalculatorServer
 // for forward compatibility
@@ -80,6 +90,7 @@ type CalculatorServer interface {
 	Subtract(context.Context, *SubtractRequest) (*SubtractReply, error)
 	Multiply(context.Context, *MultiplyRequest) (*MultiplyReply, error)
 	Divide(context.Context, *DivideRequest) (*DivideReply, error)
+	Mod(context.Context, *ModRequest) (*ModReply, error)
 	mustEmbedUnimplementedCalculatorServer()
 }
 
@@ -98,6 +109,9 @@ func (UnimplementedCalculatorServer) Multiply(context.Context, *MultiplyRequest)
 }
 func (UnimplementedCalculatorServer) Divide(context.Context, *DivideRequest) (*DivideReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Divide not implemented")
+}
+func (UnimplementedCalculatorServer) Mod(context.Context, *ModRequest) (*ModReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Mod not implemented")
 }
 func (UnimplementedCalculatorServer) mustEmbedUnimplementedCalculatorServer() {}
 
@@ -184,6 +198,24 @@ func _Calculator_Divide_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Calculator_Mod_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CalculatorServer).Mod(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/calculator.Calculator/Mod",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CalculatorServer).Mod(ctx, req.(*ModRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Calculator_ServiceDesc is the grpc.ServiceDesc for Calculator service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +238,10 @@ var Calculator_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Divide",
 			Handler:    _Calculator_Divide_Handler,
+		},
+		{
+			MethodName: "Mod",
+			Handler:    _Calculator_Mod_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

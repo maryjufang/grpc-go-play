@@ -8,6 +8,7 @@ service Calculator {
   rpc Subtract(SubtractRequest) returns (SubtractReply) {}
   rpc Multiply(MultiplyRequest) returns (MultiplyReply) {}
   rpc Divide(DivideRequest) returns (DivideReply) {}
+  rpc Mod(ModRequest) returns (ModReply) {}
 }
 
 message AddRequest {
@@ -43,5 +44,14 @@ message DivideRequest {
 }
 
 message DivideReply {
+  int32 n1 = 1;
+}
+
+message ModRequest {
+  int32 n1 = 1;
+  int32 n2 = 2;
+}
+
+message ModReply {
   int32 n1 = 1;
 }
