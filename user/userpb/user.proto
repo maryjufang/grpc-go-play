@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package user;
+option go_package = "github.com/maryjufang/userpb";
+
+message User {
+  string first_name = 1;
+  string last_name = 2;
+  int32 age = 3;
+}
+
+service UserManagement {
+  rpc CreateUser (CreateRequest) returns (CreateResponse) {}
+  rpc GetUsers (GetRequest) returns (GetResponse) {}
+}
+
+message CreateRequest {
+  User user = 1;
+}
+
+message CreateResponse {
+  User user = 1;
+}
+
+message GetRequest {
+}
+
+message GetResponse {
+  repeated User users = 1; 
+}
