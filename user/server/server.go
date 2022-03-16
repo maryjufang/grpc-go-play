@@ -19,9 +19,9 @@ type UserManagementServer struct {
 
 func (server *UserManagementServer) GetUsers(ctx context.Context, req *userpb.GetRequest) (*userpb.GetResponse, error) {
 	createSql := `
-	create table if not exists user_table(
-		first_name text,
-		last_name text,
+	CREATE TABLE if not exists user_table(
+		first_name varchar(80),
+		last_name varchar(80),
 		age int
 	);
 	`
@@ -48,6 +48,39 @@ func (server *UserManagementServer) GetUsers(ctx context.Context, req *userpb.Ge
 
 	}
 	return users_list, nil
+}
+
+func (server *UserManagementServer) CreateUser(ctx context.Context, req *userpb.CreateRequest) (*userpb.CreateResponse, error) {
+	createSql := `
+	CREATE TABLE if not exists user_table(
+		first_name varchar(80),
+		last_name varchar(80),
+		age int
+	);
+	`
+	_, err := server.conn.Exec(context.Background(), createSql)
+	if err != nil {
+		log.Printf("ERROR in server.conn.Exec")
+		return nil, err
+	}
+
+	server.first_user_creation = false
+
+	log.Printf("Received: %v", req.User.GetFirstName())
+
+	created_user := &userpb.User{FirstName: req.User.GetFirstName(), LastName: req.User.GetLastName(), Age: req.User.GetAge()}
+	tx, err := server.conn.Begin(context.Background())
+	if err != nil {
+		log.Fatalf("conn.Begin failed: %v", err)
+	}
+
+	_, err = tx.Exec(context.Background(), "INSERT INTO user_table VALUES ($1,$2,$3)",
+		created_user.FirstName, created_user.LastName, created_user.Age)
+	if err != nil {
+		log.Fatalf("tx.Exec failed: %v", err)
+	}
+	tx.Commit(context.Background())
+	return &userpb.CreateResponse{User: created_user}, nil
 }
 
 func NewUserManagementServer() *UserManagementServer {
